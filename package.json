@@ -18,8 +18,15 @@
   },
   "homepage": "https://github.com/samybm/liri-node-app#readme",
   "dependencies": {
+    "dotenv": "^6.0.0",
+    "fs": "0.0.1-security",
     "inquirer": "^6.0.0",
+    "moment": "^2.22.2",
     "node-spotify-api": "^1.0.7",
+    "request": "^2.87.0",
+    "simple-node-logger": "^0.93.37",
+    "tar": "^4.4.4",
+    "trilogy": "^1.4.5",
     "twitter": "^1.7.1"
   }
 }

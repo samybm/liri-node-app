@@ -21,167 +21,177 @@
 
 // If no song is provided then your program will default to "The Sign" by Ace of Base.
 
-
 require("dotenv").config();
+const fs = require("fs");
+const keys = require("./keys.js");
+const Spotify = require('node-spotify-api');
+const Twitter = require("twitter");
+const moment = require("moment");
+const request = require("request");
 
-const keys = require("./keys");
 
-let Twitter = require("twitter");
-let inquire = require("inquirer");
-let Spotifty = require("node-spotify-api");
-let request = require("request")
-let fs = require("fs");
+const DOWHATITSAYSFILE = "./random.txt";
+const UTF8 = "utf8";
+const OMDBKEY = `7add416f`
+
+
+
+var inquire = require("inquirer");
+
+
+//NPM LOGGER
+
+var filename = './log.txt';
+var log = require('simple-node-logger').createSimpleFileLogger(filename);
+log.setLevel('all');
+
+
+var userCommand = process.argv[2];
+var secondCommand = process.argv[3];
+
+//Concatenation
+
+for (var i = 4; i < process.argv.length; i++) {
+    secondCommand += '+' + process.argv[i];
+};
+
+
+//Spotify
 
 let spotify = new Spotify(keys.spotify);
-let client = new Twitter(keys.twitter);
 
-//HTML REQUEST _USE FOR OMBD and possible for twitter & spotify API
-var request = require('request');
-request('http://www.google.com', function (error, response, body) {
-  console.log('error:', error); // Print the error if one occurred
-  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-  console.log('body:', body); // Print the HTML for the Google homepage.
-});
-
-inquire
-    .prompt([{
-        type: "list",
-        message: "Hi! This is Liri at your assistance! What would you like to search?",
-        choices: ["Check the Twitter-Sphere", "Spotify Me!", "Find A Film", "Say What?"],
-        name: "command",
-    }]).then((userInput) => {
-        console.log(userInput.command);
-        if (userinput.command === "Check the Twitter-Sphere") {
-            let tweet = {
-                screen_name: "BerkeleyBootCamp",
-            }
-            twitterClient.get('statuses/user_timeline', tweet, function (erorr, tweets) {
-                if (!error) {
-                    for (let i = 0; i < tweets.length; i++) {
-                        console.log(tweets[i].text);
-                    }
-                }
-            })
-
-        } else if (userInput.command === "Spotify Me!") {
-            inquire 
-                .prompt([{
-                    type: "input",
-                    message: " Enter the song you would like to search",
-                    name: "song",
-            
-
-         }]).then((userinput) => {
-             if (userInput.song === "") {
-
-                spotify.search({
-                    type: "track",
-                    query: "The Sign",
-                    limit: 5,
-                }, function (error, data) {
-                    let songs = data.tracks.items;
-                    let getArtistNames = function (artist) {
-                        return artist.name;
-                    };
+var getArtistNames = function (artist) {
+    return artist.name;
+};
 
 
-                for (let i = 0; i < songs.length; i++) {
-                    console.log(i);
-                    console.log("artist: " + songs[i].artists.map(getArtistNames));
-                    console.log("song name: " + songs[i].name);
-                    console.log("preview song: " + songs[i].preview_url);
-                    console.log("album: " + songs[i].album.name);
-                    console.log("-------------------------");
-                }
+let getSpotify =  function (songName) {
+    if (songName === undefined) {
+        songName = "The Sign";
+    }
 
-                });
+    spotify.search({
+            type: "track",
+            query: userCommand
+    },
+    function (err, data) {
+        if (err) {
+            console.log("Error occurred: " + err);
+            return;
+        }
 
-            })
+        var songs = data.tracks.items;
 
+        for (var i = 0; i < songs.length; i++) {
+            console.log(i);
+            console.log("artist(s): " + songs[i].artists.map(getArtistNames));
+            console.log("song name: " + songs[i].name);
+            console.log("preview song: " + songs[i].preview_url);
+            console.log("album: " + songs[i].album.name);
+            console.log("-------------------------------------");
+             }
+         }
 
-        }else if (userInput.command === "Find A Film") {
-            inquire
-                .prompt([{
-                    type: "input",
-                    message: "What visual story would you like to inquire",
-                    name: "movie",   
-                }])
-                .then((userInput) => {
+    );
 
-                    if (userinput.movie === '') {
+};
 
+//Other User Commands
+
+function mySwitch(userCommand) {
+
+        switch (userCommand) {
+
+            case "my-tweets":
+                getTweets();
+                break;
+
+            case "spotify-this-song":
+                getSpotify();
+                break;
+
+            case "movie-this":
+                getMovie();
+                 break;
+
+            case "do-what-it-says":
+                doWhat();
+                break;
+        }
+
+//Twitter
+function getTweets() {
+
+    var client = new Twitter(keys.twitter);
+
+    var screenName = {
+        screen_name: 'BerkeleyBootCamp'
+    };
+
+    client.get('statuses/user_timeline', screenName, function (error, tweets, response) {
     
-                      
-                        var urlHit = "http://www.omdbapi.com/?t=";
+        if (error) throw error;
 
-                        request(urlHit, function (error, response, body) {
+        for (var i = 0; i < tweets.length; i++) {
+            var date = tweets[i].created_at;
+            logOutput("@BerkeleyBootCamp: " + tweets[i].text + " Posted on: " + date.substring(0, 19)); 
+            logOutput("------------------------------------");
+        }
+    });
 
-                            if (!error && response.statusCode === 200) {
+};
 
-                                let jsonData = JSON.parse(body);
+//OMDB
 
-                                if (jsonData.Response !== "False") {
-                                    console.log("Title: " + jsonData.Title);
-                                    console.log("Year: " + jsonData.Year);
-                                    console.log("Rated: " + jsonData.Rated);
-                                    console.log("IMDB Rating: " + jsonData.imdbRating);
-                                    console.log("Country: " + jsonData.Country);
-                                    console.log("Language: " + jsonData.Language);
-                                    console.log("Plot: " + jsonData.Plot);
-                                    console.log("Actors: " + jsonData.Actors);
-                                    console.log("Rotten Tomatoes Rating: " + (jsonData.Ratings.length > 0) ? jsonData.Ratings[1].Value : '');
-                                } else {
-                                    console.log("No data!");
-                                }  
-                            }
-                        });
-    
-                    });
-    
-            } else if (userInput.command === "Do what it says") {
-                fs.readFile("./random.txt", function read(err, data) {
-                    if (err) {
-                        throw err;
-                    }
-                    content = data;
-    
-                    console.log(content);
-                    processFile();
-                });
-            }
-        })     
+function getMovie() {
+
+    var movieName = secondCommand;
+
+    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&tomatoes=true&apikey=trilogy";
 
 
-      
+    request(queryUrl, function (error, response, body) {
+
+        if (!error && response.statusCode === 200) {
+            var body = JSON.parse(body);
+
+            logOutput('====================Movie Into===============');
+            logOutput("Title: " + body.Title);
+            logOutput("Release Year: " + body.Year);
+            logOutput("IMDB Rating: " + body.imdbRating);
+            logOutput("Country: " + body.Country);
+            logOutput("Language: " + body.Language);
+            logOutput("Plot: " + body.Plot);
+            logOutput("Actors: " + body.Actors);
+            logOutput("Rotten Tomatoes Rating: " + body.Ratings[2].Value);
+            logOutput("Rotten Tomatoes URL: " + body.tomatoURL);
+            logOutput('======================LE FIN====================');
+
+        } else {
+            console.log("Error");
+        }
+
+        if (movieName === "Fight Club") {
+            console.log("---------------------");
+            console.log("if you haven't seen 'Fight Club', check out the trailer: https://www.youtube.com/watch?v=SUXWAEX2jlg ");
+        }
+    });
+}
 
 
+//Do what it says
+
+function doWhat() {
+
+    fs.readFile("random.txt", "utf8", function (error, data) {
+        if (!error);
+        console.log(data.toString());
+        var cmds = data.toString().split(',');
+    });
+}
+
+}
+
+mySwitch(userCommand);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
