@@ -22,20 +22,14 @@
 // If no song is provided then your program will default to "The Sign" by Ace of Base.
 
 require("dotenv").config();
-const fs = require("fs");
-const keys = require("./keys.js");
-const Spotify = require('node-spotify-api');
-const Twitter = require("twitter");
-const moment = require("moment");
-const request = require("request");
-
-
-const DOWHATITSAYSFILE = "./random.txt";
-const UTF8 = "utf8";
-const OMDBKEY = `7add416f`
-
-
-
+var fs = require("fs");
+var keys = require("./keys.js");
+var Spotify = require('node-spotify-api');
+var Twitter = require("twitter");
+var moment = require("moment");
+var request = require("request");
+ 
+var OMDBKEY = `7add416f`
 var inquire = require("inquirer");
 
 
